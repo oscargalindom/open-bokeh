@@ -2,9 +2,6 @@ import numpy as np
 import cv2
 
 
-# from project import S, sum_pixels, count
-
-
 class ConnectedComponents:
     def __init__(self, I):
         self.I = I
@@ -15,6 +12,9 @@ class ConnectedComponents:
         self.sum_pixels = np.copy(I).reshape(self.rows * self.cols, 3)
 
     def find(self, i):
+        """
+        Find i with path compression
+        """
         if self.S[i] < 0:
             return i
         s = self.find(self.S[i])
@@ -22,8 +22,10 @@ class ConnectedComponents:
         return s
 
     def union(self, i, j):
-        # Joins two regions if they are similar
-        # Keeps track of size and mean color of regions
+        """
+        Joins two regions if they are less than self.thr
+        Keeps track of size and mean color of regions
+        """
         ri = self.find(i)
         rj = self.find(j)
         if ri != rj:
@@ -37,8 +39,10 @@ class ConnectedComponents:
                 self.sum_pixels[rj, :] = 0
 
     def regular_union(self, i, j):
-        # Joins two regions if they are similar
-        # Keeps track of size and mean color of regions
+        """
+        Joins two regions without account for similarity
+        Keeps track of size and mean color of regions
+        """
         ri = self.find(i)
         rj = self.find(j)
         if ri != rj:
@@ -49,8 +53,10 @@ class ConnectedComponents:
             self.sum_pixels[rj, :] = 0
 
     def connected_components_segmentation(self):
-        # rows = I.shape[0]
-        # cols = I.shape[1]
+        """
+        Performs connected components segmentation on entire image
+        except last row and column using the threshold the object has
+        """
         for p in range(self.S.shape[0]):
             if p % self.cols < self.cols - 1:  # If p is not in the last column
                 self.union(p, p + 1)  # p+1 is the pixel to the right of p
@@ -58,18 +64,12 @@ class ConnectedComponents:
                 self.union(p, p + self.cols)  # p+cols is the pixel to below p
 
     def calculate_threshold(self):
+        """
+        Whatever Oscar did to calculate the threshold automatically
+        :return:
+        """
         std = [np.std(self.I[:, :, 0]), np.std(self.I[:, :, 1]), np.std(self.I[:, :, 2])]
         self.thr = std[np.argmax(std)]
-        # return std[np.argmax(std)]
-
-    def num_regions(self):
-        return np.sum(self.S == -1)
-
-    def regions(self, size=1):
-        """
-        Returns regions of size n in image
-        """
-        return np.sum(self.count == size)
 
     def show(self, mode='mean'):
         """
@@ -89,3 +89,12 @@ class ConnectedComponents:
             cv2.imshow('Segmentation - using mean colors', seg_im_mean)
         elif mode == 'rand':
             cv2.imshow('Segmentation - using random colors', seg_im_rand)
+
+    def num_regions(self):
+        return np.sum(self.S == -1)
+
+    def regions(self, size=1):
+        """
+        Returns regions of size n in image
+        """
+        return np.sum(self.count == size)

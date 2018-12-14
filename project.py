@@ -9,7 +9,7 @@ Open bokeh, creates a bokeh effect on images
 import numpy as np
 import cv2
 
-from connected_componenets import ConnectedComponents
+from connected_components import ConnectedComponents
 
 # thr=0.2
 ######################################
@@ -47,9 +47,6 @@ for (x, y, w, h) in faces:
     cc_face = ConnectedComponents(face)
     cc_face.calculate_threshold()
     print(cc_face.thr)
-
-    # S, count, sum_pixels = initialize(face)
-    # connected_components_segmentation(face, thr)
 
     cc_face.connected_components_segmentation()
     print('Regions found: ', cc_face.num_regions())
