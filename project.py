@@ -36,7 +36,7 @@ def union(i,j,thr):
             sum_pixels[ri,:]+=sum_pixels[rj,:]
             sum_pixels[rj,:]=0
             
-def regular_union(i,j,thr):
+def regular_union(i,j):
     # Joins two regions if they are similar
     # Keeps track of size and mean color of regions
     ri =find(i)
@@ -64,41 +64,68 @@ def connected_components_segmentation(I,thr):
             union(p,p+1,thr) # p+1 is the pixel to the right of p  
         if p//cols < rows-1: # If p is not in the last row   
             union(p,p+cols,thr) # p+cols is the pixel to below p  
+            
 def calculate_threshold(I):
     std = [np.std(I[:,:,0]), np.std(I[:,:,1]), np.std(I[:,:,2])]
     return std[np.argmax(std)]
+
+def connect_face_region(x,y,width,length,I):
+    print('Initial Pixel', y)
+#    initial_pixel = 250
+    initial_pixel = I.shape[1] * (y) + (x)
+    for pixel_row in range (width):
+        for pixel_column in range(length):
+            regular_union(initial_pixel, I.shape[1] * (pixel_row) + pixel_column + initial_pixel)
+        
+            
+            
     
-#thr=0.2
+
+#def connect_faces(I, x, y, w, h):
+#    rows = I.shape[0]
+#    cols = I.shpae[1]
+#    for p in range ()
+    
+    
 ######################################
 face_cascade = cv2.CascadeClassifier('/anaconda3/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml')
 eye_cascade = cv2.CascadeClassifier('/anaconda3/share/OpenCV/haarcascades/haarcascade_eye.xml')
-img = cv2.imread('Screen Shot 2018-12-02 at 9.34.12 PM.png')
+img = cv2.imread('Google-Pixel-2-Portrait-Mode-Sample-Photo-1.jpg')
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 faces = face_cascade.detectMultiScale(gray, 1.2, 5)
 
 for (x,y,w,h) in faces:
     I = img[y+2:y+h-2, x+2:x+w-2] #Change the order to get the actual face Sliced.
-    cv2.rectangle(img,(x,y),(x+w,y+h),(0,215,255),2)
-    cv2.imshow('Face', I)
+#    cv2.rectangle(img,(x,y),(x+w,y+h),(0,215,255),2)
     roi_gray = gray[y:y+h, x:x+w]
     roi_color = img[y:y+10, x:x+10]
 
-#img = cv2.resize(img, (920,640))
-cv2.imshow('Face', I)
-cv2.imshow('img',img)
+cv2.imshow('Original Image',img)
 ######################################
+
+image_number = 1
+#S, count, sum_pixels = initialize(img)
+
+
 for (x,y,w,h) in faces:
     face  =  img[y+2:y+h-2,x+2:x+w-2,:]
     thr = calculate_threshold(face)
-    print(thr)
-    cv2.imshow('Face', face)
+#    print(img.shape[0])
+#    print(img.shape[1])
+#    print(x)
+#    print(y)
+#    print(w)
+#    print(h)
+#    print(thr)
+    cv2.imshow(f'Face{image_number}', face)
     #I  =  (cv2.imread('capetown.jpg',1)/255)
     #I  =  (cv2.imread('mayon.jpg',1)/255)
     
-    rows = face.shape[0]
-    cols = face.shape[1]   
-    S, count, sum_pixels = initialize(face)
-    connected_components_segmentation(face,thr)
+    rows = img.shape[0]
+    cols = img.shape[1]   
+    S, count, sum_pixels = initialize(img)
+    connect_face_region(x,y,img.shape[0]- y,w, img)
+    connected_components_segmentation(img,thr)
     
     print('Regions found: ',np.sum(S==-1))
     print('Size 1 regions found: ',np.sum(count==1))
@@ -114,5 +141,6 @@ for (x,y,w,h) in faces:
                 
     cv2.imshow('Segmentation 1 - using mean colors',seg_im_mean)
     cv2.imshow('Segmentation 2 - using random colors',seg_im_rand)
+    image_number += 1
 cv2.waitKey(0)
 cv2.destroyAllWindows()  
